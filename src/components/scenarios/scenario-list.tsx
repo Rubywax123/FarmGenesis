@@ -204,7 +204,17 @@ export function ScenarioList({
             Duplicate a scenario to test price, yield, or cost changes side by side.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>New scenario</Button>
+        <div className="flex flex-wrap gap-2">
+          {scenarios.length >= 2 ? (
+            <ButtonLink
+              variant="outline"
+              href={`/projects/${projectId}/compare?a=${scenarios[0].id}&b=${scenarios[1].id}`}
+            >
+              Compare
+            </ButtonLink>
+          ) : null}
+          <Button onClick={() => setCreateOpen(true)}>New scenario</Button>
+        </div>
       </div>
 
       {error ? (

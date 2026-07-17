@@ -11,8 +11,8 @@ export function AppShell({
 }): React.JSX.Element {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-card)]/90 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-6">
+      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-card)]/90 backdrop-blur print:hidden">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link
             href="/"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
@@ -32,7 +32,9 @@ export function AppShell({
           </span>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 print:max-w-none print:p-0">
+        {children}
+      </main>
     </div>
   );
 }

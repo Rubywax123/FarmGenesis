@@ -21,19 +21,21 @@ export function PageHeader({
       {backHref ? (
         <Link
           href={backHref}
-          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)]"
+          className="inline-flex items-center gap-1 text-sm text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)] print:hidden"
         >
           <span aria-hidden>←</span> {backLabel}
         </Link>
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
           {description ? (
             <p className="max-w-2xl text-[var(--color-muted-foreground)]">{description}</p>
           ) : null}
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? (
+          <div className="flex flex-wrap items-center gap-2 print:hidden">{actions}</div>
+        ) : null}
       </div>
     </div>
   );

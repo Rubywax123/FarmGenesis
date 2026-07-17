@@ -50,3 +50,23 @@ body {
     "Segoe UI",
     sans-serif;
 }
+
+/*
+ * Print-friendly dashboard (SPEC Phase 5): white background, no app chrome
+ * (header, buttons, and back links carry `print:hidden`), cards keep their
+ * borders but lose shadows, and charts/tables avoid page breaks.
+ */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  .recharts-responsive-container,
+  table {
+    break-inside: avoid;
+  }
+}

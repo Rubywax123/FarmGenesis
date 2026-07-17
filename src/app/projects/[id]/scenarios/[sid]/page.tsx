@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ScenarioDashboard } from "@/components/scenarios/dashboard/scenario-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { PrintButton } from "@/components/ui/print-button";
 import { prisma } from "@/lib/db";
 import { scenarioInputSchema } from "@/lib/schemas/scenario";
 import type { ScenarioInput } from "@/engine/types";
@@ -40,12 +41,15 @@ export default async function ScenarioPage({
         backHref={`/projects/${projectId}`}
         backLabel={`Back to ${scenario.project.name}`}
         actions={
-          <ButtonLink
-            variant="outline"
-            href={`/projects/${projectId}/scenarios/${sid}/edit`}
-          >
-            Edit scenario
-          </ButtonLink>
+          <>
+            <PrintButton />
+            <ButtonLink
+              variant="outline"
+              href={`/projects/${projectId}/scenarios/${sid}/edit`}
+            >
+              Edit scenario
+            </ButtonLink>
+          </>
         }
       />
       <ScenarioDashboard input={input} />
