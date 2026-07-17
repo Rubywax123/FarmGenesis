@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { calculateScenario } from "@/engine";
 import type { ScenarioInput } from "@/engine/types";
 import { formatUsd } from "@/lib/format";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import {
@@ -16,7 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PromptDialog } from "@/components/ui/dialog";
+import { ConfirmDialog, PromptDialog } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export interface ScenarioRecord {
   id: string;
@@ -54,24 +55,18 @@ export function ProjectHeader({
   }
 
   return (
-    <div className="space-y-2">
-      <Link
-        href="/"
-        className="text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-      >
-        ← All projects
-      </Link>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{name}</h1>
-          <p className="mt-1 text-[var(--color-muted-foreground)]">
-            {location ?? "No location set"}
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => setRenameOpen(true)}>
-          Rename project
-        </Button>
-      </div>
+    <>
+      <PageHeader
+        title={name}
+        description={location ?? "No location set"}
+        backHref="/"
+        backLabel="All projects"
+        actions={
+          <Button variant="outline" onClick={() => setRenameOpen(true)}>
+            Rename project
+          </Button>
+        }
+      />
       <PromptDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}
@@ -81,33 +76,29 @@ export function ProjectHeader({
         submitLabel="Save"
         onSubmit={renameProject}
       />
-    </div>
+    </>
   );
 }
 
 function ScenarioKpis({ input }: { input: ScenarioInput }): React.JSX.Element {
   const result = React.useMemo(() => calculateScenario(input), [input]);
 
+  const kpis = [
+    { label: "5-yr revenue", value: result.kpis.fiveYearRevenue },
+    { label: "5-yr EBITDA", value: result.kpis.fiveYearEbitda },
+    { label: "Peak loan", value: result.kpis.peakLoanBalance },
+  ];
+
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          5-yr revenue
-        </p>
-        <p className="text-lg font-semibold">{formatUsd(result.kpis.fiveYearRevenue)}</p>
-      </div>
-      <div>
-        <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          5-yr EBITDA
-        </p>
-        <p className="text-lg font-semibold">{formatUsd(result.kpis.fiveYearEbitda)}</p>
-      </div>
-      <div>
-        <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          Peak loan
-        </p>
-        <p className="text-lg font-semibold">{formatUsd(result.kpis.peakLoanBalance)}</p>
-      </div>
+    <div className="grid gap-4 rounded-lg bg-[var(--color-secondary)]/50 p-4 sm:grid-cols-3">
+      {kpis.map((kpi) => (
+        <div key={kpi.label}>
+          <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
+            {kpi.label}
+          </p>
+          <p className="text-lg font-semibold tabular-nums">{formatUsd(kpi.value)}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -124,6 +115,7 @@ export function ScenarioList({
   const router = useRouter();
   const [scenarios, setScenarios] = React.useState(initialScenarios);
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<ScenarioRecord | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -172,15 +164,13 @@ export function ScenarioList({
     router.refresh();
   }
 
-  async function deleteScenario(scenario: ScenarioRecord): Promise<void> {
-    if (!window.confirm(`Delete scenario "${scenario.name}"? This cannot be undone.`)) {
-      return;
-    }
-
+  async function confirmDeleteScenario(): Promise<void> {
+    if (!deleteTarget) return;
     setError(null);
-    const response = await fetch(`/api/projects/${projectId}/scenarios/${scenario.id}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `/api/projects/${projectId}/scenarios/${deleteTarget.id}`,
+      { method: "DELETE" },
+    );
     if (!response.ok) {
       const data = (await response.json()) as { error?: string };
       setError(data.error ?? "Could not delete scenario");
@@ -206,7 +196,7 @@ export function ScenarioList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">Scenarios</h2>
@@ -224,21 +214,15 @@ export function ScenarioList({
       ) : null}
 
       {scenarios.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No scenarios yet</CardTitle>
-            <CardDescription>
-              Create a scenario to start from the Zimbabwe blueberry base case defaults.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => setCreateOpen(true)}>Create scenario</Button>
-          </CardFooter>
-        </Card>
+        <EmptyState
+          title="No scenarios yet"
+          description="Create a scenario to start from the Zimbabwe blueberry base case defaults, then adjust the assumptions."
+          action={<Button onClick={() => setCreateOpen(true)}>Create scenario</Button>}
+        />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           {scenarios.map((scenario) => (
-            <Card key={scenario.id}>
+            <Card key={scenario.id} className="transition-shadow hover:shadow-md">
               <CardHeader>
                 <div className="flex flex-wrap items-center gap-3">
                   <CardTitle>{scenario.name}</CardTitle>
@@ -251,19 +235,32 @@ export function ScenarioList({
               <CardContent>
                 <ScenarioKpis input={scenario.input} />
               </CardContent>
-              <CardFooter className="flex flex-wrap gap-2">
-                <ButtonLink href={`/projects/${projectId}/scenarios/${scenario.id}`}>
-                  Open
-                </ButtonLink>
-                <Button variant="outline" onClick={() => duplicateScenario(scenario)}>
-                  Duplicate
-                </Button>
-                {!scenario.isBase ? (
-                  <Button variant="secondary" onClick={() => setAsBase(scenario)}>
-                    Set as base
+              <CardFooter className="justify-between gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <ButtonLink href={`/projects/${projectId}/scenarios/${scenario.id}`}>
+                    Open
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="outline"
+                    href={`/projects/${projectId}/scenarios/${scenario.id}/edit`}
+                  >
+                    Edit
+                  </ButtonLink>
+                  <Button variant="outline" onClick={() => duplicateScenario(scenario)}>
+                    Duplicate
                   </Button>
-                ) : null}
-                <Button variant="destructive" onClick={() => deleteScenario(scenario)}>
+                  {!scenario.isBase ? (
+                    <Button variant="secondary" onClick={() => setAsBase(scenario)}>
+                      Set as base
+                    </Button>
+                  ) : null}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
+                  onClick={() => setDeleteTarget(scenario)}
+                >
                   Delete
                 </Button>
               </CardFooter>
@@ -281,6 +278,17 @@ export function ScenarioList({
         placeholder="Base case"
         submitLabel="Create"
         onSubmit={createScenario}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete scenario?"
+        description={`"${deleteTarget?.name ?? ""}" will be permanently deleted. This cannot be undone.`}
+        confirmLabel="Delete scenario"
+        onConfirm={confirmDeleteScenario}
       />
     </div>
   );

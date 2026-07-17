@@ -62,6 +62,50 @@ export function Dialog({
   );
 }
 
+interface ConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onConfirm: () => Promise<void> | void;
+}
+
+/** Confirmation dialog for destructive actions — replaces window.confirm. */
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel = "Delete",
+  onConfirm,
+}: ConfirmDialogProps): React.JSX.Element {
+  const [busy, setBusy] = React.useState(false);
+
+  async function handleConfirm(): Promise<void> {
+    setBusy(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title={title} description={description}>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          Cancel
+        </Button>
+        <Button type="button" variant="destructive" disabled={busy} onClick={handleConfirm}>
+          {busy ? "Working…" : confirmLabel}
+        </Button>
+      </div>
+    </Dialog>
+  );
+}
+
 interface PromptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

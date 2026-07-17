@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { ProjectHeader } from "@/components/scenarios/scenario-list";
-import { ScenarioList } from "@/components/scenarios/scenario-list";
+import { ProjectHeader, ScenarioList } from "@/components/scenarios/scenario-list";
 import { prisma } from "@/lib/db";
 import { scenarioInputSchema } from "@/lib/schemas/scenario";
 import type { ScenarioInput } from "@/engine/types";
@@ -36,15 +35,13 @@ export default async function ProjectPage({
   }));
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <div className="space-y-8">
-        <ProjectHeader
-          projectId={project.id}
-          name={project.name}
-          location={project.location}
-        />
-        <ScenarioList projectId={project.id} initialScenarios={scenarios} />
-      </div>
-    </main>
+    <div className="space-y-8">
+      <ProjectHeader
+        projectId={project.id}
+        name={project.name}
+        location={project.location}
+      />
+      <ScenarioList projectId={project.id} initialScenarios={scenarios} />
+    </div>
   );
 }

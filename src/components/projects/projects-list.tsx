@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import {
@@ -12,7 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PromptDialog } from "@/components/ui/dialog";
+import { ConfirmDialog, PromptDialog } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export interface ProjectSummary {
   id: string;
@@ -31,6 +33,7 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
   const [projects, setProjects] = React.useState(initialProjects);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [renameProject, setRenameProject] = React.useState<ProjectSummary | null>(null);
+  const [deleteProject, setDeleteProject] = React.useState<ProjectSummary | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   async function refreshProjects(): Promise<void> {
@@ -72,17 +75,12 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
     router.refresh();
   }
 
-  async function deleteProject(project: ProjectSummary): Promise<void> {
-    if (
-      !window.confirm(
-        `Delete "${project.name}" and all ${project.scenarioCount} scenario(s)? This cannot be undone.`,
-      )
-    ) {
-      return;
-    }
-
+  async function confirmDeleteProject(): Promise<void> {
+    if (!deleteProject) return;
     setError(null);
-    const response = await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
+    const response = await fetch(`/api/projects/${deleteProject.id}`, {
+      method: "DELETE",
+    });
     if (!response.ok) {
       const data = (await response.json()) as { error?: string };
       setError(data.error ?? "Could not delete project");
@@ -93,16 +91,12 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">FarmForecast</h1>
-          <p className="mt-1 text-[var(--color-muted-foreground)]">
-            Build and compare five-year farm financial forecasts.
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>New project</Button>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Projects"
+        description="Each project is one farm plan. Open a project to build and compare forecast scenarios."
+        actions={<Button onClick={() => setCreateOpen(true)}>New project</Button>}
+      />
 
       {error ? (
         <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -111,24 +105,21 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
       ) : null}
 
       {projects.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No projects yet</CardTitle>
-            <CardDescription>
-              Create your first project to start building forecast scenarios.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button onClick={() => setCreateOpen(true)}>Create project</Button>
-          </CardFooter>
-        </Card>
+        <EmptyState
+          title="No projects yet"
+          description="Create your first project to start building five-year forecast scenarios for the farm."
+          action={<Button onClick={() => setCreateOpen(true)}>Create project</Button>}
+        />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
-            <Card key={project.id} className="flex flex-col">
+            <Card
+              key={project.id}
+              className="flex flex-col transition-shadow hover:shadow-md"
+            >
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle>{project.name}</CardTitle>
                     <CardDescription>
                       {project.location ?? "No location set"} · {project.currency}
@@ -146,12 +137,19 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
                   outcomes.
                 </p>
               </CardContent>
-              <CardFooter className="flex flex-wrap gap-2">
-                <ButtonLink href={`/projects/${project.id}`}>Open</ButtonLink>
-                <Button variant="outline" onClick={() => setRenameProject(project)}>
-                  Rename
-                </Button>
-                <Button variant="destructive" onClick={() => deleteProject(project)}>
+              <CardFooter className="justify-between gap-2">
+                <div className="flex gap-2">
+                  <ButtonLink href={`/projects/${project.id}`}>Open</ButtonLink>
+                  <Button variant="outline" onClick={() => setRenameProject(project)}>
+                    Rename
+                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
+                  onClick={() => setDeleteProject(project)}
+                >
                   Delete
                 </Button>
               </CardFooter>
@@ -181,6 +179,17 @@ export function ProjectsList({ initialProjects }: ProjectsListProps): React.JSX.
         defaultValue={renameProject?.name ?? ""}
         submitLabel="Save"
         onSubmit={renameProjectById}
+      />
+
+      <ConfirmDialog
+        open={deleteProject !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteProject(null);
+        }}
+        title="Delete project?"
+        description={`"${deleteProject?.name ?? ""}" and all ${deleteProject?.scenarioCount ?? 0} scenario(s) will be permanently deleted. This cannot be undone.`}
+        confirmLabel="Delete project"
+        onConfirm={confirmDeleteProject}
       />
     </div>
   );

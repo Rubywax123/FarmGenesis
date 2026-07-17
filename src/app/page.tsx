@@ -10,16 +10,14 @@ export default async function HomePage(): Promise<React.JSX.Element> {
   });
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
-      <ProjectsList
-        initialProjects={projects.map((project) => ({
-          id: project.id,
-          name: project.name,
-          location: project.location,
-          currency: project.currency,
-          scenarioCount: project._count.scenarios,
-        }))}
-      />
-    </main>
+    <ProjectsList
+      initialProjects={projects.map((project) => ({
+        id: project.id,
+        name: project.name,
+        location: project.location,
+        currency: project.currency,
+        scenarioCount: project._count.scenarios,
+      }))}
+    />
   );
 }

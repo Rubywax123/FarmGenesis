@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -30,33 +30,37 @@ export default async function ScenarioPage({
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <div className="space-y-6">
-        <Link
-          href={`/projects/${projectId}`}
-          className="text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-        >
-          ← Back to {scenario.project.name}
-        </Link>
+    <div className="space-y-8">
+      <PageHeader
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            {scenario.name}
+            {scenario.isBase ? <Badge>Base case</Badge> : null}
+          </span>
+        }
+        backHref={`/projects/${projectId}`}
+        backLabel={`Back to ${scenario.project.name}`}
+        actions={
+          <ButtonLink href={`/projects/${projectId}/scenarios/${sid}/edit`}>
+            Edit scenario
+          </ButtonLink>
+        }
+      />
 
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-3">
-              <CardTitle>{scenario.name}</CardTitle>
-              {scenario.isBase ? <Badge>Base case</Badge> : null}
-            </div>
-            <CardDescription>
-              Scenario dashboard and charts will be added in a later phase. Assumptions are
-              saved; results recompute when you open or edit a scenario.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" disabled>
-              Edit scenario (Phase 3)
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+      <Card>
+        <CardHeader>
+          <CardTitle>Dashboard coming in Phase 4</CardTitle>
+          <CardDescription>
+            Assumptions are saved; results recompute when you open or edit a scenario. The
+            bank-facing dashboard with charts will be added in a later phase.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Use “Edit scenario” to review and change the assumptions.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
