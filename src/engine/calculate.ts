@@ -11,6 +11,7 @@ import {
 import type {
   AnnualSummaryRow,
   MonthlyRow,
+  ProductionRampRow,
   RentalScheduleRow,
   ScenarioInput,
   ScenarioResult,
@@ -287,6 +288,8 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
     const repayments = rows.reduce((sum, row) => sum + row.repay, 0);
     const netCashMovement = rows.reduce((sum, row) => sum + row.netCF, 0);
     const closingLoanBalance = rows[rows.length - 1].closingLoan;
+    const ebitda = revenue - opex;
+    const debtService = interest + repayments;
 
     annual.push({
       projectYear: py,
@@ -294,12 +297,14 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
       productionT,
       revenue,
       opex,
-      ebitda: revenue - opex,
+      ebitda,
       interest,
       drawdowns,
       repayments,
       netCashMovement,
       closingLoanBalance,
+      debtService,
+      dscr: debtService > 0 ? Math.max(0, ebitda) / debtService : null,
     });
   }
 
@@ -308,8 +313,25 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
   const fiveYearOpex = fiveYearAnnual.reduce((s, row) => s + row.opex, 0);
 
   const harvestYearProductionT: Record<number, number> = {};
+  const productionRamp: ProductionRampRow[] = [];
   for (const year of [...harvestYears].sort((a, b) => a - b)) {
     harvestYearProductionT[year] = harvestYearProductionInModel(input, year);
+
+    const byBlockT: Record<string, number> = {};
+    let totalT = 0;
+    for (const block of input.blocks) {
+      let kg = 0;
+      for (let m = 1; m <= input.modelMonths; m++) {
+        if (calYear(input.modelStart, m) === year) {
+          kg += blockProductionKg(block, input, m);
+        }
+      }
+      byBlockT[block.name] = kg / 1000;
+      totalT += kg / 1000;
+    }
+    if (totalT > 0) {
+      productionRamp.push({ harvestYear: year, totalT, byBlockT });
+    }
   }
 
   const modelStartDate = parseIsoDate(input.modelStart);
@@ -348,6 +370,7 @@ export function calculateScenario(input: ScenarioInput): ScenarioResult {
     monthly,
     annual,
     harvestYearProductionT,
+    productionRamp,
     kpis: {
       totalProductionKg: monthly.reduce((s, row) => s + row.productionKg, 0),
       fiveYearRevenue,

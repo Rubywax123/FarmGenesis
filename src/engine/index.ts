@@ -8,6 +8,7 @@ export type {
   AnnualSummaryRow,
   MonthlyRow,
   MonthName,
+  ProductionRampRow,
   RentalScheduleRow,
   ScenarioInput,
   ScenarioResult,

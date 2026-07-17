@@ -1,15 +1,11 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
+import { ScenarioDashboard } from "@/components/scenarios/dashboard/scenario-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { prisma } from "@/lib/db";
+import { scenarioInputSchema } from "@/lib/schemas/scenario";
+import type { ScenarioInput } from "@/engine/types";
 
 interface ScenarioPageProps {
   params: Promise<{ id: string; sid: string }>;
@@ -29,6 +25,8 @@ export default async function ScenarioPage({
     notFound();
   }
 
+  const input = scenarioInputSchema.parse(scenario.input) as ScenarioInput;
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -38,29 +36,19 @@ export default async function ScenarioPage({
             {scenario.isBase ? <Badge>Base case</Badge> : null}
           </span>
         }
+        description="All figures below are computed live from the saved assumptions."
         backHref={`/projects/${projectId}`}
         backLabel={`Back to ${scenario.project.name}`}
         actions={
-          <ButtonLink href={`/projects/${projectId}/scenarios/${sid}/edit`}>
+          <ButtonLink
+            variant="outline"
+            href={`/projects/${projectId}/scenarios/${sid}/edit`}
+          >
             Edit scenario
           </ButtonLink>
         }
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Dashboard coming in Phase 4</CardTitle>
-          <CardDescription>
-            Assumptions are saved; results recompute when you open or edit a scenario. The
-            bank-facing dashboard with charts will be added in a later phase.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Use “Edit scenario” to review and change the assumptions.
-          </p>
-        </CardContent>
-      </Card>
+      <ScenarioDashboard input={input} />
     </div>
   );
 }

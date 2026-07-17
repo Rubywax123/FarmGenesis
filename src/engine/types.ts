@@ -94,6 +94,15 @@ export interface AnnualSummaryRow {
   repayments: number;
   netCashMovement: number;
   closingLoanBalance: number;
+  debtService: number;
+  dscr: number | null;
+}
+
+/** In-model production per harvest calendar year, split by planting block. */
+export interface ProductionRampRow {
+  harvestYear: number;
+  totalT: number;
+  byBlockT: Record<string, number>;
 }
 
 /** Rental charge schedule entry for one harvest calendar year. */
@@ -111,6 +120,7 @@ export interface ScenarioResult {
   monthly: MonthlyRow[];
   annual: AnnualSummaryRow[];
   harvestYearProductionT: Record<number, number>;
+  productionRamp: ProductionRampRow[];
   kpis: {
     totalProductionKg: number;
     fiveYearRevenue: number;
