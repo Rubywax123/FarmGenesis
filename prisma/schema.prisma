@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String     @id @default(cuid())
+  userId    String?
+  name      String
+  location  String?
+  currency  String     @default("USD")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  scenarios Scenario[]
+}
+
+model Scenario {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  isBase    Boolean  @default(false)
+  input     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
