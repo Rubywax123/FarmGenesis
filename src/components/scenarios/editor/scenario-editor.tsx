@@ -6,7 +6,7 @@ import type { ScenarioInput } from "@/engine/types";
 import { scenarioInputSchema } from "@/lib/schemas/scenario";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BasicsTab } from "./basics-tab";
 import { CostsTab } from "./costs-tab";
@@ -118,6 +118,12 @@ export function ScenarioEditor({
                 Unsaved changes
               </span>
             ) : null}
+            <ButtonLink
+              variant="outline"
+              href={`/projects/${projectId}/scenarios/${scenarioId}/drivers`}
+            >
+              Explore drivers
+            </ButtonLink>
             <Button onClick={save} disabled={saving}>
               {saving ? "Saving…" : "Save scenario"}
             </Button>

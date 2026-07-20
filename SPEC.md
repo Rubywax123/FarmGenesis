@@ -319,6 +319,7 @@ Also test: harvest curve validation (must sum to 1), no production before April 
   - Seeding must be **idempotent** (`upsert` by fixed IDs) so it can safely run on every deploy.
   - All secrets (`DATABASE_URL`) come from environment variables — provided by Replit Secrets in production, `.env` locally. `.env` is git-ignored; commit a `.env.example` instead.
   - Add a `README.md` section: local setup, running tests, and how the Replit deploy works (build `next build`, run command above).
+- **Phase 7 — Drivers page + sensitivity view.** A per-scenario "Drivers" page with guardrailed sliders, a live impact readout, a plain-English model explainer, and a tornado sensitivity chart. Specified fully in Section 14.
 ## 12. Non-goals for v1 (do not build)
  
 - CAPEX, tax, depreciation, multi-currency.
@@ -332,3 +333,55 @@ Also test: harvest curve validation (must sum to 1), no production before April 
 - Engine functions documented with JSDoc explaining each formula in plain English.
 - Every form field has a label, unit, and sensible default; errors in plain language.
 - The app must run with `npm install && npx prisma migrate dev && npm run seed && npm run dev` on a fresh machine with a valid `DATABASE_URL`, and deploy on Replit with `npm run build` then `npx prisma migrate deploy && npm start`.
+
+## 14. Phase 7 — Drivers page & sensitivity view
+
+A per-scenario page at `/projects/[id]/scenarios/[sid]/drivers`, linked prominently from both the scenario dashboard and the scenario editor. It presents the model's key drivers as cards a non-technical farmer can understand and safely experiment with, explains the model in plain English, and shows which assumptions matter most.
+
+### 14.1 Drivers page
+
+Eight drivers, each shown as a card:
+
+| Driver | Input field | Guardrails | Unit |
+|---|---|---|---|
+| Selling price | `sellingPricePerKg` | $2–$10 | $/kg |
+| Year 1 yield | `yieldCurve.year1` | 2–12 | t/ha |
+| Year 2 yield | `yieldCurve.year2` | 6–20 | t/ha |
+| Year 3+ yield | `yieldCurve.year3plus` | 8–30 | t/ha |
+| Loan interest rate | `loan.interestRatePA` | 5–25 | % p.a. |
+| Repayment start | `loan.repaymentStartMonth` | 6–24 | model month |
+| Rental share | `rental.percentOfHarvestGross` | 0–20 | % of harvest gross |
+| Cost inflation | `annualCostInflation` | 0–15 | % per year |
+
+Each driver card has:
+
+- A plain-language name and a one-sentence explanation of what it means on the farm (e.g. "Selling price — what you get paid per kg at the farm gate, after grading").
+- The current saved value with its unit.
+- A slider constrained to the guardrails above, plus a numeric input (also clamped to the guardrails).
+- A per-card "Reset" that returns the driver to its saved value.
+
+Live impact readout: as the user moves any slider, the engine re-runs in the browser with the trial values (debounced) and shows **5-yr EBITDA**, **peak loan balance**, and **loan-repaid month**, each with a delta vs the saved scenario (green when the change helps, red when it hurts).
+
+Changes are exploratory by default. A global "Reset all" returns every driver to its saved value. A clearly separated "Save these values to scenario" button persists the trial values via the existing scenario PATCH route (`PATCH /api/projects/[id]/scenarios/[sid]`), passing the full input through the existing Zod validation.
+
+### 14.2 "How the model works" explainer
+
+A collapsible section on the same page explaining each calculation in plain English — no formulas. Short paragraphs with small inline examples using the scenario's own numbers, covering:
+
+- How revenue comes from yield × area × harvest spread × price.
+- How monthly costs come from the seasonal cost base with per-category scaling and annual inflation.
+- How rent is a share of harvest-year gross (default 10%) paid once in October.
+- How the loan auto-draws to cover shortfalls, charges monthly interest, and repays by cash sweep from the repayment start month.
+- What DSCR means.
+
+### 14.3 Sensitivity view — "What matters most"
+
+On the same page (as a tab or section): a **tornado chart**. For each driver in 14.1, run the engine at −10% and +10% of its saved value (clamped to the guardrails) and plot the resulting change in the chosen metric as horizontal bars, sorted by impact, with the baseline in the middle (zero line). A toggle switches the metric between **5-yr EBITDA** and **peak loan balance**. Caption in plain language: "The longest bars are the assumptions that matter most — small changes there move the result the most." All computed client-side with the existing engine.
+
+### 14.4 Rules
+
+- **No changes to any formula in `src/engine/`.** A pure helper for "run the engine with overridden inputs" may be added (it must remain free of Next.js/Prisma/React imports, like the rest of the engine).
+- No DB schema changes; nothing new is persisted except via the existing scenario PATCH route.
+- The existing 21 engine acceptance tests must still pass; component-level tests only if trivial.
+- Reuse the design system components and the chart-card pattern; every element gets the same plain-language caption treatment as the dashboard.
+- Use pnpm for all commands.

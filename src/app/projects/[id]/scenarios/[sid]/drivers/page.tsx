@@ -1,20 +1,19 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { ScenarioDashboard } from "@/components/scenarios/dashboard/scenario-dashboard";
+import { DriversView } from "@/components/scenarios/drivers/drivers-view";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { PrintButton } from "@/components/ui/print-button";
 import { prisma } from "@/lib/db";
 import { scenarioInputSchema } from "@/lib/schemas/scenario";
 import type { ScenarioInput } from "@/engine/types";
 
-interface ScenarioPageProps {
+interface DriversPageProps {
   params: Promise<{ id: string; sid: string }>;
 }
 
-export default async function ScenarioPage({
+export default async function DriversPage({
   params,
-}: ScenarioPageProps): Promise<React.JSX.Element> {
+}: DriversPageProps): Promise<React.JSX.Element> {
   const { id: projectId, sid } = await params;
 
   const scenario = await prisma.scenario.findFirst({
@@ -33,29 +32,27 @@ export default async function ScenarioPage({
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-3">
-            {scenario.name}
+            {scenario.name} — Drivers
             {scenario.isBase ? <Badge>Base case</Badge> : null}
           </span>
         }
-        description="All figures below are computed live from the saved assumptions."
-        backHref={`/projects/${projectId}`}
-        backLabel={`Back to ${scenario.project.name}`}
+        description="Try different assumptions safely — move a slider and watch the result change. Nothing is saved until you choose to save."
+        backHref={`/projects/${projectId}/scenarios/${sid}`}
+        backLabel="Back to dashboard"
         actions={
-          <>
-            <PrintButton />
-            <ButtonLink
-              variant="outline"
-              href={`/projects/${projectId}/scenarios/${sid}/edit`}
-            >
-              Edit scenario
-            </ButtonLink>
-            <ButtonLink href={`/projects/${projectId}/scenarios/${sid}/drivers`}>
-              Explore drivers
-            </ButtonLink>
-          </>
+          <ButtonLink
+            variant="outline"
+            href={`/projects/${projectId}/scenarios/${sid}/edit`}
+          >
+            Edit scenario
+          </ButtonLink>
         }
       />
-      <ScenarioDashboard input={input} />
+      <DriversView
+        projectId={projectId}
+        scenarioId={sid}
+        savedInput={input}
+      />
     </div>
   );
 }
