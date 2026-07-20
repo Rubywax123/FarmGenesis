@@ -79,11 +79,11 @@ pnpm run build       # typecheck + next build (production build)
 
 This repo was scaffolded by Replit Agent and deploys as a Replit **autoscale** app. The deployment is configured in `.replit`:
 
-- **Build command:** `pnpm run build` — runs the strict typechecks then `next build`.
-- **Run command:** `npx prisma migrate deploy && pnpm run seed && pnpm start`
+- **Build command:** `pnpm build` — runs the strict typechecks then `next build`.
+- **Run command:** `npx prisma migrate deploy && pnpm start`
   - `prisma migrate deploy` applies any pending committed migrations (never generates new ones).
-  - `pnpm run seed` is safe on every deploy because it is idempotent (fixed-ID upserts, no overwrites of user data).
   - `pnpm start` runs `next start -H 0.0.0.0`, binding to all interfaces. Next.js reads the port from the `PORT` environment variable (Replit sets it; it falls back to 3000 locally).
+  - Seeding (`pnpm run seed`) is idempotent and can be run at any time — including on deploys — without duplicating the Blueberry project or overwriting user data.
 
 ### Required secrets
 

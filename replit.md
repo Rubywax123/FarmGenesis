@@ -1,45 +1,46 @@
-# [Project name]
+# FarmForecast
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Financial forecasting app for farming projects: model planting blocks, yield ramp-up, harvest curves, costs, and loan financing, then explore results on a dashboard readable by a loan officer. `SPEC.md` is the source of truth.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm dev` — run the Next.js dev server (port 3000)
+- `pnpm build` — strict typecheck (engine + app) then `next build`
+- `pnpm start` — production server (`next start -H 0.0.0.0`, port from `PORT`, fallback 3000)
+- `pnpm test` — Vitest engine acceptance tests (21 tests, no DB needed)
+- `pnpm run db:migrate` — `prisma migrate dev` (local schema changes)
+- `pnpm run seed` — idempotent seed (fixed-ID upserts; safe to re-run, never overwrites user data)
+- Required env: `DATABASE_URL` — Postgres connection string (Replit Secrets in production, `.env` locally)
+
+## Deployment (autoscale)
+
+- Build: `pnpm build`
+- Run: `npx prisma migrate deploy && pnpm start`
+- The app is a single Next.js server at the repo root serving both pages and `/api/*` routes on `process.env.PORT`. There is no separate API server.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Next.js 15 (App Router), React 19, TypeScript 5.9 (strict)
+- PostgreSQL + Prisma ORM (migrations committed under `prisma/migrations/`)
+- Tailwind CSS 4 + shadcn/ui-style components, Recharts, Zod
+- Vitest for the engine acceptance tests
+- pnpm (single package, no workspace sub-packages)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `src/engine/` — pure TS calculation engine + seed data + acceptance tests (no UI/DB/Next imports allowed)
+- `src/app/` — Next.js pages and API routes
+- `src/components/` — design system (`ui/`, `layout/`) and feature components
+- `src/lib/` — Prisma client, Zod schemas, formatting helpers
+- `prisma/` — schema, migrations, idempotent seed script
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Scenario **inputs** are stored in the DB (`Scenario.input` as JSON); **results are never stored** — they are computed in the browser by the engine on every view.
+- Seeding upserts by fixed IDs with empty `update` blocks, so deploys never duplicate the Blueberry project or overwrite user edits.
+- The original Replit Agent scaffold (Express `artifacts/api-server`, `artifacts/mockup-sandbox`, `lib/*` Drizzle/Orval packages) was removed; it was never used by the app.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Use pnpm only — the `preinstall` script blocks npm/yarn.
+- `pnpm build` runs the strict engine typecheck first; engine code must stay dependency-free.
