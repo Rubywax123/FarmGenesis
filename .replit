@@ -3,6 +3,8 @@ modules = ["nodejs-24"]
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
+build = ["sh", "-c", "pnpm run build"]
+run = ["sh", "-c", "npx prisma migrate deploy && pnpm run seed && pnpm start"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
@@ -10,6 +12,18 @@ env = { "CI" = "true" }
 
 [workflows]
 runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm dev"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
 
 [agent]
 stack = "PNPM_WORKSPACE"

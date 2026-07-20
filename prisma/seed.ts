@@ -13,6 +13,13 @@ const seedInput = blueberryZimbabweBaseCase as unknown as Prisma.InputJsonValue;
 
 const prisma = new PrismaClient();
 
+/**
+ * Idempotent seed, safe to run on every deploy:
+ * - Upserts by fixed IDs, so re-running never duplicates the Blueberry project.
+ * - The `update` branches are empty, so any edits the user makes to the seeded
+ *   project or base scenario are preserved across deploys. Only missing
+ *   records are (re)created.
+ */
 async function main(): Promise<void> {
   await prisma.project.upsert({
     where: { id: SEED_PROJECT_ID },
@@ -22,11 +29,7 @@ async function main(): Promise<void> {
       location: "Zimbabwe",
       currency: "USD",
     },
-    update: {
-      name: PROJECT_NAME,
-      location: "Zimbabwe",
-      currency: "USD",
-    },
+    update: {},
   });
 
   await prisma.scenario.upsert({
@@ -38,11 +41,7 @@ async function main(): Promise<void> {
       isBase: true,
       input: seedInput,
     },
-    update: {
-      name: SCENARIO_NAME,
-      isBase: true,
-      input: seedInput,
-    },
+    update: {},
   });
 
   console.log(`Seeded project "${PROJECT_NAME}" with base scenario "${SCENARIO_NAME}".`);
