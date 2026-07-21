@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — FarmForecast</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f5ef;
+        color: #22301f;
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      .card {
+        background: #ffffff;
+        border: 1px solid #ddd6c6;
+        border-radius: 12px;
+        padding: 40px 32px;
+        max-width: 420px;
+      }
+      img {
+        width: 72px;
+        height: 72px;
+        border-radius: 16px;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 16px 0 8px;
+      }
+      p {
+        font-size: 0.9rem;
+        color: #67705f;
+        margin: 0 0 20px;
+      }
+      button {
+        background: #2f6b3a;
+        color: #f7f5ef;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <img src="/icon-192.png" alt="FarmForecast" />
+      <h1>You're offline</h1>
+      <p>
+        FarmForecast needs a connection to load fresh forecast data. Check
+        your connection and try again.
+      </p>
+      <button onclick="location.reload()">Retry</button>
+    </div>
+  </body>
+</html>

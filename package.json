@@ -32,12 +32,15 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^22.18.6",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
     "prettier": "^3.9.5",
     "prisma": "^6.16.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.20.5",
     "typescript": "~5.9.3",
